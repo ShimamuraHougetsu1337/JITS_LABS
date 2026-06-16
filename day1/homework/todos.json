@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "title": "Học JavaScript cơ bản",
+    "priority": "high",
+    "completed": true,
+    "createdAt": "2026-06-16T06:48:04.842Z"
+  },
+  {
+    "id": 2,
+    "title": "Đọc tài liệu Node.js",
+    "priority": "high",
+    "completed": false,
+    "createdAt": "2026-06-16T06:48:05.053Z"
+  },
+  {
+    "id": 3,
+    "title": "Làm bài tập async/await",
+    "priority": "medium",
+    "completed": false,
+    "createdAt": "2026-06-16T06:48:05.263Z"
+  },
+  {
+    "id": 5,
+    "title": "Push code lên GitHub",
+    "priority": "medium",
+    "completed": false,
+    "createdAt": "2026-06-16T06:48:05.680Z"
+  }
+]

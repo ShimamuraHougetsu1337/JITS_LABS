@@ -27,10 +27,26 @@ const delay = (ms = 200) => new Promise(resolve => setTimeout(resolve, ms));
  * @returns {Promise<Object>} Todo vừa tạo
  */
 async function addTodo(title, priority = "medium") {
+  await delay();
   // TODO: validate input (title không được rỗng, priority phải hợp lệ)
+  if (!title || title.trim() === "") {
+    throw new Error("Title không được rỗng");
+  }
+  if (!["low", "medium", "high"].includes(priority)) {
+    throw new Error("Priority phải là low, medium hoặc high");
+  }
   // TODO: tạo todo object với: id, title, priority, completed: false, createdAt: new Date()
+  const todo = {
+    id: nextId++,
+    title: title.trim(),
+    priority,
+    completed: false,
+    createdAt: new Date(),
+  };
   // TODO: push vào mảng todos
+  todos.push(todo);
   // TODO: return todo vừa tạo
+  return todo;
 }
 
 /**
@@ -40,8 +56,15 @@ async function addTodo(title, priority = "medium") {
  */
 async function completeTodo(id) {
   // TODO: tìm todo theo id, throw Error nếu không tìm thấy
+  await delay();
+  const todo = todos.find(t => t.id === id);
+  if (!todo) {
+    throw new Error(`Không tìm thấy todo với id ${id}`);
+  }
   // TODO: set completed = true
+  todo.completed = true;
   // TODO: return todo đã update
+  return todo;
 }
 
 /**
@@ -51,9 +74,16 @@ async function completeTodo(id) {
  */
 async function deleteTodo(id) {
   // TODO: tìm index của todo theo id
+  await delay();
+  const index = todos.findIndex(t => t.id === id);
   // TODO: throw Error nếu không tìm thấy
+  if (index === -1) {
+    throw new Error(`Không tìm thấy todo với id ${id}`);
+  }
   // TODO: xóa khỏi mảng dùng splice
+  todos.splice(index, 1);
   // TODO: return true
+  return true;
 }
 
 /**
@@ -66,6 +96,16 @@ async function listTodos(filter = "all") {
   // "all" -> tất cả
   // "active" -> chưa hoàn thành
   // "completed" -> đã hoàn thành
+  await delay();
+  if (filter === "all") {
+    return todos;
+  }
+  if (filter === "active") {
+    return todos.filter(t => !t.completed);
+  }
+  if (filter === "completed") {
+    return todos.filter(t => t.completed);
+  }
 }
 
 /**
@@ -75,6 +115,8 @@ async function listTodos(filter = "all") {
  */
 async function searchTodos(keyword) {
   // TODO: tìm todos có title chứa keyword (case-insensitive)
+  await delay();
+  return todos.filter(todo => todo.title.toLowerCase().includes(keyword.toLowerCase()));
 }
 
 // ============================================================
@@ -143,6 +185,9 @@ async function main() {
   } catch (err) {
     console.log("Expected error:", err.message);
   }
+
+  await saveTodos();
+  await loadTodos();
 }
 
 main().catch(console.error);
@@ -151,19 +196,20 @@ main().catch(console.error);
 // BONUS: Lưu/đọc từ file JSON (nếu làm xong phần trên)
 // ============================================================
 
-// const fs = require("fs").promises;
-// const DATA_FILE = path.join(__dirname, "todos.json");
+const fs = require("fs").promises;
+const path = require("path");
+const DATA_FILE = path.join(__dirname, "todos.json");
 
-// async function saveTodos() {
-//   await fs.writeFile(DATA_FILE, JSON.stringify(todos, null, 2));
-// }
+async function saveTodos() {
+  await fs.writeFile(DATA_FILE, JSON.stringify(todos, null, 2));
+}
 
-// async function loadTodos() {
-//   try {
-//     const data = await fs.readFile(DATA_FILE, "utf-8");
-//     todos = JSON.parse(data);
-//     nextId = todos.length > 0 ? Math.max(...todos.map(t => t.id)) + 1 : 1;
-//   } catch {
-//     todos = []; // file chưa tồn tại, bắt đầu với mảng rỗng
-//   }
-// }
+async function loadTodos() {
+  try {
+    const data = await fs.readFile(DATA_FILE, "utf-8");
+    todos = JSON.parse(data);
+    nextId = todos.length > 0 ? Math.max(...todos.map(t => t.id)) + 1 : 1;
+  } catch {
+    todos = []; // file chưa tồn tại, bắt đầu với mảng rỗng
+  }
+}

@@ -93,6 +93,8 @@ console.log("Sorted:", sortedByPrice?.map(p => `${p.name}: ${p.price}`));
 
 function printUserInfo(user) {
   // TODO: destructure và log
+  const { firstName, lastName, age, address: { city, district } } = user
+  console.log(`${firstName} ${lastName} (${age} tuoi) - ${district}, ${city}`)
 }
 
 // Test:
