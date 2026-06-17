@@ -20,7 +20,7 @@ function requestLogger(req, res, next) {
   res.on("finish", () => {
     const duration = Date.now() - start;
     const statusColor = res.statusCode >= 500 ? "ERROR" :
-                        res.statusCode >= 400 ? "WARN " : "OK   ";
+      res.statusCode >= 400 ? "WARN " : "OK   ";
     console.log(`[${timestamp()}] [${statusColor}] <-- ${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
   });
 
@@ -38,15 +38,6 @@ function requestLogger(req, res, next) {
 function validateBody(schema) {
   return (req, res, next) => {
     const errors = [];
-
-    // Safeguard: Check if req.body is missing
-    if (!req.body) {
-      return res.status(400).json({
-        success: false,
-        error: "Validation failed",
-        details: ["Body is required"],
-      });
-    }
 
     for (const [field, rules] of Object.entries(schema)) {
       const value = req.body[field];
