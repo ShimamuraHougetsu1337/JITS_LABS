@@ -228,7 +228,12 @@ function validateBody(schema) {
   return (req, res, next) => {
     const errors = [];
 
-    // Safeguard: Check if req.body is missing
+    // TODO: implement validation logic
+    // Duyệt qua từng field trong schema
+    // Check required, type, minLength/maxLength, min/max
+    // Push lỗi vào errors array
+    // Ví dụ lỗi: "name is required", "price must be a number", "name must be at least 2 characters"
+
     if (!req.body) {
       return res.status(400).json({
         error: "Validation failed",
@@ -248,7 +253,7 @@ function validateBody(schema) {
       // Nếu không required và không có value, bỏ qua
       if (value === undefined || value === null) continue;
 
-      // Check type and determine if it's valid
+      // Check type
       let isTypeValid = true;
       if (rules.type === "string" && typeof value !== "string") {
         errors.push(`${field} must be a string`);
@@ -266,7 +271,7 @@ function validateBody(schema) {
       // Nếu sai kiểu dữ liệu thì không check các điều kiện ràng buộc nữa
       if (!isTypeValid) continue;
 
-      // Check string constraints
+      // Check string
       if (rules.type === "string") {
         if (rules.minLength !== undefined && value.length < rules.minLength) {
           errors.push(`${field} must be at least ${rules.minLength} characters`);
@@ -276,7 +281,7 @@ function validateBody(schema) {
         }
       }
 
-      // Check number constraints
+      // Check number
       if (rules.type === "number") {
         if (rules.min !== undefined && value < rules.min) {
           errors.push(`${field} must be at least ${rules.min}`);
