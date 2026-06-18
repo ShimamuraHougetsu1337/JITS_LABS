@@ -1,0 +1,25 @@
+{
+  "name": "intern_homework",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShimamuraHougetsu1337/Intern_homework.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShimamuraHougetsu1337/Intern_homework/issues"
+  },
+  "homepage": "https://github.com/ShimamuraHougetsu1337/Intern_homework#readme",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0",
+    "globals": "^17.6.0"
+  }
+}
