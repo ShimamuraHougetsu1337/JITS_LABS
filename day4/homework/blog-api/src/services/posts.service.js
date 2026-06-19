@@ -13,6 +13,7 @@
  */
 
 const Post = require("../models/post.model");
+const Comment = require("../models/comment.model");
 
 // ============================================================
 // TODO: getAllPosts
@@ -38,7 +39,32 @@ const Post = require("../models/post.model");
 
 async function getAllPosts({ page = 1, limit = 10, sort = "-createdAt", tag, published } = {}) {
   // TODO: implement getAllPosts với pagination và populate author
-  throw new Error("TODO: implement getAllPosts service");
+  const filter = {};
+  if (tag) {
+    filter.tags = tag;
+  }
+  if (published !== undefined) {
+    filter.published = published;
+  }
+  const skip = (page - 1) * limit;
+  const [posts, total] = await Promise.all([
+    Post.find(filter).sort(sort).skip(skip).limit(limit).populate("author", "name email").lean(),
+    Post.countDocuments(filter)
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  const hasNext = page < totalPages;
+  const hasPrev = page > 1;
+  return {
+    data: posts,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    },
+  };
 }
 
 // ============================================================
@@ -55,7 +81,13 @@ async function getAllPosts({ page = 1, limit = 10, sort = "-createdAt", tag, pub
 
 async function getPostById(postId) {
   // TODO: implement getPostById, populate author
-  throw new Error("TODO: implement getPostById service");
+  const post = await Post.findById(postId).populate("author", "name email");
+  if (!post) {
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return post;
 }
 
 // ============================================================
@@ -72,10 +104,15 @@ async function getPostById(postId) {
 //       return post;
 //
 // Câu hỏi: tại sao cần populate AFTER create thay vì dùng .lean() rồi query lại?
+// Trả lời:
+// 1. Tối ưu số lượng query: Khi Post.create() chạy xong, Node.js đã có sẵn dữ liệu của post trong bộ nhớ RAM. Gọi post.populate() lúc này chỉ thực hiện thêm đúng 1 query tìm thông tin của Author và gắn vào. Nếu dùng .lean() rồi query lại, ta sẽ mất thêm 1 query nữa để tìm lại post đó từ database (tổng cộng tốn 2 query thay vì 1).
+// 2. Giữ nguyên instance: Populate trực tiếp trên document giúp giữ nguyên các phương thức của Mongoose Document (như .save(), .toObject(), virtuals) cho các xử lý nghiệp vụ phía sau.
 
 async function createPost(authorId, { title, content, tags, published }) {
   // TODO: implement createPost với author reference
-  throw new Error("TODO: implement createPost service");
+  const post = await Post.create({ title, content, tags, published, author: authorId });
+  await post.populate({ path: "author", select: "name email" });
+  return post;
 }
 
 // ============================================================
@@ -102,7 +139,23 @@ async function createPost(authorId, { title, content, tags, published }) {
 
 async function updatePost(postId, updateData, currentUserId, currentUserRole) {
   // TODO: implement updatePost với ownership check
-  throw new Error("TODO: implement updatePost service");
+  const post = await Post.findById(postId);
+  if (!post) {
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (post.author.toString() !== currentUserId.toString() && currentUserRole !== "admin") {
+    const error = new Error("You can only edit your own posts");
+    error.statusCode = 403;
+    throw error;
+  }
+  const updated = await Post.findByIdAndUpdate(
+    postId,
+    { $set: updateData },
+    { new: true, runValidators: true }
+  ).populate("author", "name email");
+  return updated;
 }
 
 // ============================================================
@@ -120,8 +173,21 @@ async function updatePost(postId, updateData, currentUserId, currentUserRole) {
 
 async function deletePost(postId, currentUserId, currentUserRole) {
   // TODO: implement deletePost với ownership check
+  const post = await Post.findById(postId);
+  if (!post) {
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (post.author.toString() !== currentUserId.toString() && currentUserRole !== "admin") {
+    const error = new Error("You can only delete your own posts");
+    error.statusCode = 403;
+    throw error;
+  }
+  await Post.findByIdAndDelete(postId);
   // Bonus: xóa comments liên quan
-  throw new Error("TODO: implement deletePost service");
+  await Comment.deleteMany({ post: postId });
+  return { message: "Post deleted successfully" };
 }
 
 // ============================================================
@@ -138,7 +204,23 @@ async function deletePost(postId, currentUserId, currentUserRole) {
 
 async function setPublished(postId, published, currentUserId, currentUserRole) {
   // TODO: implement setPublished (publish/unpublish)
-  throw new Error("TODO: implement setPublished service");
+  const post = await Post.findById(postId);
+  if (!post) {
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (post.author.toString() !== currentUserId.toString() && currentUserRole !== "admin") {
+    const error = new Error("You can only edit your own posts");
+    error.statusCode = 403;
+    throw error;
+  }
+  const updated = await Post.findByIdAndUpdate(
+    postId,
+    { published },
+    { new: true }
+  );
+  return updated;
 }
 
 module.exports = {

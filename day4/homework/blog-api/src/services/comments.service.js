@@ -26,7 +26,20 @@ const Post = require("../models/post.model");
 
 async function getCommentsByPost(postId) {
   // TODO: implement getCommentsByPost
-  throw new Error("TODO: implement getCommentsByPost service");
+  const post = await Post.findById(postId);
+  if (!post) {
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  const comments = await Comment.find({
+    post: postId
+  }).sort("createdAt").populate({
+    path: "author",
+    select: "name"
+  }).lean();
+
+  return comments;
 }
 
 // ============================================================
@@ -44,10 +57,24 @@ async function getCommentsByPost(postId) {
 //       return comment;
 //
 // Câu hỏi: tại sao chỉ cho comment vào published post?
+// Trả lời: Vì các bài viết nháp (draft / chưa published) là bài viết đang được tác giả biên soạn, chưa chính thức công bố công khai. Người dùng bình thường không thể nhìn thấy nên việc cho phép bình luận trên các bài viết chưa xuất bản là không hợp lý.
 
 async function addComment(postId, { content }, authorId) {
   // TODO: implement addComment với check post published
-  throw new Error("TODO: implement addComment service");
+  const post = await Post.findById(postId);
+  if (!post || !post.published) {
+    const error = new Error("Post not found or not published");
+    error.statusCode = 404;
+    throw error;
+  }
+  const comment = await Comment.create({
+    content,
+    post: postId,
+    author: authorId
+  });
+
+  await comment.populate({ path: "author", select: "name" })
+  return comment;
 }
 
 // ============================================================
@@ -66,7 +93,19 @@ async function addComment(postId, { content }, authorId) {
 
 async function deleteComment(commentId, currentUserId, currentUserRole) {
   // TODO: implement deleteComment với ownership check
-  throw new Error("TODO: implement deleteComment service");
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    const error = new Error("Comment not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (comment.author.toString() !== currentUserId.toString() && currentUserRole !== "admin") {
+    const error = new Error("Unauthorized");
+    error.statusCode = 403;
+    throw error;
+  }
+  await Comment.findByIdAndDelete(commentId);
+  return { message: "Comment deleted" };
 }
 
 module.exports = {
