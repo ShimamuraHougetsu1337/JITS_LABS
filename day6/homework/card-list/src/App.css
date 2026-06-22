@@ -1,0 +1,20 @@
+/* TODO: Viết CSS cho Product Store */
+
+/* Gợi ý các class cần style:
+ *
+ * .app             — container chính, max-width, padding, font
+ * .header          — tiêu đề + giỏ hàng
+ * .filters         — search, category buttons, checkbox, sort
+ * .product-grid    — CSS Grid: 3 cột desktop, 2 tablet, 1 mobile
+ * .product-card    — border, border-radius, padding, shadow
+ * .out-of-stock    — opacity thấp
+ * .in-cart         — border màu xanh
+ * .price           — font lớn, font-weight bold
+ * .stars           — màu vàng (#f59e0b)
+ * .category-badge  — background nhạt, border-radius, padding nhỏ
+ * .empty-state     — text center, color nhạt
+ *
+ * Responsive:
+ *   @media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+ *   @media (max-width: 480px)  { .product-grid { grid-template-columns: 1fr; } }
+ */
