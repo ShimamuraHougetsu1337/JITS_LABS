@@ -45,6 +45,10 @@ const INITIAL_CONTACTS = [
 
 function SearchInput({ value, onChange, placeholder }) {
   // TODO: tạo ref, useEffect auto-focus
+  const inputRef = useRef(null);
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
 
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
@@ -56,7 +60,7 @@ function SearchInput({ value, onChange, placeholder }) {
         placeholder={placeholder}
         style={{ padding: 8, fontSize: 14, flex: 1 }}
       />
-      <button onClick={() => {/* TODO: focus */}}>Focus</button>
+      <button onClick={() => inputRef.current.focus()}>Focus</button>
     </div>
   );
 }
@@ -78,10 +82,11 @@ function SearchInput({ value, onChange, placeholder }) {
 
 function RenderCounter() {
   // TODO: implement
-
+  const renderCount = useRef(0);
+  renderCount.current += 1;
   return (
     <p style={{ color: "#888", fontSize: 12 }}>
-      Component đã render ??? lần
+      Component đã render {renderCount.current} lần
     </p>
   );
 }
@@ -99,7 +104,7 @@ function RenderCounter() {
 
 // TODO 5.3 — Implement ContactItem bên dưới:
 
-function ContactItem({ contact, onRemove }) {
+const ContactItem = React.memo(function ContactItem({ contact, onRemove }) {
   console.log("ContactItem rendered:", contact.name);
 
   return (
@@ -112,21 +117,20 @@ function ContactItem({ contact, onRemove }) {
       alignItems: "center",
     }}>
       <div>
-        {/* TODO: hiển thị contact info */}
         <strong>{contact.name}</strong>
         <p style={{ margin: "4px 0", color: "#666", fontSize: 13 }}>
           {contact.email} | {contact.phone} | {contact.city}
         </p>
       </div>
       <button
-        onClick={() => {/* TODO: gọi onRemove */}}
+        onClick={() => onRemove(contact.id)}
         style={{ color: "red", cursor: "pointer" }}
       >
         Xóa
       </button>
     </div>
   );
-}
+});
 
 // ============================================================
 // TODO 5.4: ContactList — kết hợp tất cả hooks
@@ -177,35 +181,51 @@ function ContactItem({ contact, onRemove }) {
 
 function ContactList() {
   // TODO: khai báo state
+  const [contacts, setContacts] = useState(INITIAL_CONTACTS);
+  const [search, setSearch] = useState("");
+  const [filterCity, setFilterCity] = useState("all");
 
   // TODO: useMemo cho filteredContacts
+  const filteredContacts = useMemo(() => {
+    const searchLower = search.toLowerCase();
+    return contacts.filter(contact => {
+      const matchesSearch = contact.name.toLowerCase().includes(searchLower) ||
+        contact.email.toLowerCase().includes(searchLower);
+      const matchesCity = filterCity === "all" || contact.city === filterCity;
+      return matchesSearch && matchesCity;
+    });
+  }, [contacts, search, filterCity]);
 
   // TODO: useCallback cho handleRemove
+  const handleRemove = useCallback((id) => {
+    setContacts(prev => prev.filter(c => c.id !== id));
+  }, []);
 
   const cities = ["all", "HCM", "Hanoi", "Da Nang"];
 
   return (
     <div>
       {/* TODO: SearchInput component */}
-      {/* <SearchInput
+      <SearchInput
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Tìm theo tên hoặc email..."
-      /> */}
+      />
 
       {/* TODO: Filter buttons */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {cities.map(city => (
           <button
             key={city}
-            onClick={() => {/* TODO: setFilterCity */}}
+            onClick={() => setFilterCity(city)}
             style={{
               padding: "6px 12px",
               // TODO: active style khi filterCity === city
-              backgroundColor: "#eee",
+              backgroundColor: filterCity === city ? "#ccc" : "#eee",
               border: "1px solid #ccc",
               borderRadius: 4,
               cursor: "pointer",
+              fontWeight: filterCity === city ? "bold" : "normal",
             }}
           >
             {city === "all" ? "Tất cả" : city}
@@ -214,11 +234,11 @@ function ContactList() {
       </div>
 
       {/* TODO: Hiển thị số kết quả */}
-      {/* <p>Hiển thị {filteredContacts.length} / {contacts.length} contacts</p> */}
+      <p>Hiển thị {filteredContacts.length} / {contacts.length} contacts</p>
 
       {/* TODO: Render list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {/* {filteredContacts.length === 0 ? (
+        {filteredContacts.length === 0 ? (
           <p style={{ color: "#999" }}>Không tìm thấy contact nào.</p>
         ) : (
           filteredContacts.map(contact => (
@@ -228,11 +248,11 @@ function ContactList() {
               onRemove={handleRemove}
             />
           ))
-        )} */}
+        )}
       </div>
 
       {/* TODO: RenderCounter */}
-      {/* <RenderCounter /> */}
+      <RenderCounter />
     </div>
   );
 }
@@ -261,22 +281,22 @@ export default App;
 // Q1: Nếu KHÔNG dùng useMemo cho filteredContacts, chuyện gì xảy ra?
 //     (Gợi ý: mỗi re-render → filter + sort chạy lại dù contacts không đổi)
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: Logic filter sẽ chạy lại mỗi lần render kể cả khi contacts không đổi, gây lãng phí tài nguyên CPU (đặc biệt khi danh sách lớn).
 //
 // Q2: Nếu KHÔNG dùng useCallback cho handleRemove, chuyện gì xảy ra?
 //     (Gợi ý: mỗi re-render → handleRemove là function MỚI → ContactItem re-render)
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: Mỗi lần render cha sẽ tạo ra một hàm handleRemove có tham chiếu mới, khiến React.memo của ContactItem mất tác dụng và toàn bộ các ContactItem đều bị re-render vô ích.
 //
 // Q3: handleRemove dùng setContacts(prev => prev.filter(...)) thay vì
 //     setContacts(contacts.filter(...)). Tại sao?
 //     (Gợi ý: nếu dùng contacts, deps phải có [contacts] → callback thay đổi mỗi render)
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: Để giữ dependency array của useCallback trống ([]). Nhờ đó, hàm handleRemove giữ nguyên tham chiếu ổn định và không bị tạo lại khi contacts thay đổi.
 //
 // Q4: useRef đếm render count — tại sao KHÔNG dùng useState để đếm?
 //     (Gợi ý: setState → re-render → đếm tăng → setState → vòng lặp vô tận)
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: Vì setState kích hoạt re-render. Việc gọi setState để tăng biến đếm trong thân hàm component sẽ tiếp tục kích hoạt render mới, tạo ra vòng lặp vô hạn làm sập app.
 //
 // ─────────────────────────────────────────────────────────────

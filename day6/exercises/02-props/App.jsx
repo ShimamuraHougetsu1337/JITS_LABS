@@ -49,7 +49,21 @@
 //   }
 
 // TODO 2.1 — Implement ProductCard bên dưới:
-
+const ProductCard = ({ name, price, category, inStock }) => {
+  return (
+    <div className="product-card">
+      <h3>{name}</h3>
+      <p className="price">{price.toLocaleString("vi-VN") + "VND"}</p>
+      <span className="category-badge">{category}</span>
+      <button
+        disabled={inStock ? false : true}
+        style={{ backgroundColor: inStock ? "#4CAF50" : "#ccc" }}
+      >
+        {inStock ? "Mua ngay" : "Hết hàng"}
+      </button>
+    </div>
+  )
+}
 // ============================================================
 // TODO 2.2: ProductCard với default props và callback
 // ============================================================
@@ -74,7 +88,34 @@
 //   [Mua ngay]
 
 // TODO 2.2 — Implement bên dưới:
-
+const ProductCardPro = (props) => {
+  const { discount = 0, name, price, category, inStock, onAddToCart } = props
+  const finalPrice = price * (1 - discount / 100)
+  return (
+    <div className="product-card">
+      <h3>{name}</h3>
+      <p className="price">
+        {discount > 0 ? (
+          <>
+            <s>{price.toLocaleString("vi-VN")} VND</s>{" "}
+            {finalPrice.toLocaleString("vi-VN")} VND{" "}
+            <span className="discount-badge">-{discount}%</span>
+          </>
+        ) : (
+          `${price.toLocaleString("vi-VN")} VND`
+        )}
+      </p>
+      <span className="category-badge">{category}</span>
+      <button
+        disabled={!inStock}
+        style={{ backgroundColor: inStock ? "#4CAF50" : "#ccc" }}
+        onClick={() => onAddToCart?.({ name, price, finalPrice })}
+      >
+        {inStock ? "Mua ngay" : "Hết hàng"}
+      </button>
+    </div>
+  )
+}
 // ============================================================
 // TODO 2.3: Card wrapper dùng children
 // ============================================================
@@ -108,6 +149,19 @@
 //   </Card>
 
 // TODO 2.3 — Implement Card bên dưới:
+const Card = ({ title, children }) => {
+  return (
+    <div style={{
+      border: "1px solid #ddd",
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 16,
+    }}>
+      {title && <h3 style={{ marginTop: 0 }}>{title}</h3>}
+      {children}
+    </div>
+  )
+}
 
 // ============================================================
 // App — Render tất cả components để test
@@ -125,7 +179,7 @@ function App() {
 
       <h2>2.1 — ProductCard cơ bản</h2>
       {/* TODO: Uncomment sau khi implement ProductCard */}
-      {/* <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <ProductCard
           name="Laptop Dell XPS 13"
           price={28000000}
@@ -144,11 +198,10 @@ function App() {
           category="peripheral"
           inStock={true}
         />
-      </div> */}
+      </div>
 
       <h2>2.2 — ProductCard với discount & callback</h2>
-      {/* TODO: Uncomment sau khi implement ProductCardPro */}
-      {/* <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <ProductCardPro
           name="Laptop Dell XPS 13"
           price={28000000}
@@ -171,11 +224,11 @@ function App() {
           inStock={false}
           discount={10}
         />
-      </div> */}
+      </div>
 
       <h2>2.3 — Card wrapper (children)</h2>
       {/* TODO: Uncomment sau khi implement Card */}
-      {/* <Card title="Thông tin cá nhân">
+      <Card title="Thông tin cá nhân">
         <p>Tên: Nguyen Van A</p>
         <p>Email: nguyenvana@example.com</p>
         <button>Chỉnh sửa</button>
@@ -189,7 +242,7 @@ function App() {
       </Card>
       <Card>
         <p>Card không có title — chỉ có children</p>
-      </Card> */}
+      </Card>
     </div>
   );
 }

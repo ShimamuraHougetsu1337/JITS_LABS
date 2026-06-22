@@ -38,6 +38,17 @@
 //   }
 
 // TODO 1.1 — Implement ProfileCard bên dưới:
+const ProfileCard = ({ name, title, bio, avatarUrl }) => {
+  const shortBio = bio && bio.length > 100 ? bio.slice(0, 100) + "..." : bio;
+  return (
+    <div className="profile-card">
+      <img src={avatarUrl || "https://via.placeholder.com/100"} alt={name} />
+      <h2>{name}</h2>
+      <p className="title">{title}</p>
+      <p className="bio">{shortBio}</p>
+    </div>
+  );
+};
 
 // ============================================================
 // TODO 1.2: Biểu thức trong JSX
@@ -59,6 +70,19 @@
 //   Ngày: 22/06/2026
 
 // TODO 1.2 — Implement ScoreBoard bên dưới:
+const ScoreBoard = ({ studentName, score }) => {
+  const isPass = score >= 50;
+  return (
+    <div>
+      <p>{studentName} — {score} điểm</p>
+      <p style={{ color: isPass ? "green" : "red" }}>
+        Kết quả: {isPass ? "Pass" : "Fail"}
+      </p>
+      {score >= 90 && <span className="badge">Excellent!</span>}
+      <p>Ngày: {new Date().toLocaleDateString("vi-VN")}</p>
+    </div>
+  );
+};
 
 // ============================================================
 // TODO 1.3: Fragment và conditional rendering
@@ -81,7 +105,18 @@
 //   );
 
 // TODO 1.3 — Implement UserStatus bên dưới:
-
+const UserStatus = ({ name, isOnline, lastSeen }) => {
+  return (
+    <>
+      <h3>{name}</h3>
+      {isOnline ? (
+        <p>🟢 Online</p>
+      ) : (
+        <p>⚫ Offline — Last seen: {lastSeen || "Unknown"}</p>
+      )}
+    </>
+  )
+}
 // ============================================================
 // App — Render tất cả components để test
 // ============================================================
@@ -92,30 +127,27 @@ function App() {
       <h1>Day 6 — Exercise 01: JSX Basics</h1>
 
       <h2>1.1 — ProfileCard</h2>
-      {/* TODO: Uncomment sau khi implement ProfileCard */}
-      {/* <ProfileCard
+      <ProfileCard
         name="Nguyen Van A"
         title="Frontend Developer"
         bio="Passionate about React and building great user experiences. Love learning new technologies and sharing knowledge with the community."
         avatarUrl="https://via.placeholder.com/100"
-      /> */}
-      {/* <ProfileCard
+      />
+      <ProfileCard
         name="Tran Thi B"
         title="Backend Developer"
         bio="Short bio"
-      /> */}
+      />
 
       <h2>1.2 — ScoreBoard</h2>
-      {/* TODO: Uncomment sau khi implement ScoreBoard */}
-      {/* <ScoreBoard studentName="Nguyen Van A" score={95} /> */}
-      {/* <ScoreBoard studentName="Tran Thi B" score={42} /> */}
-      {/* <ScoreBoard studentName="Le Van C" score={50} /> */}
+      <ScoreBoard studentName="Nguyen Van A" score={95} />
+      <ScoreBoard studentName="Tran Thi B" score={42} />
+      <ScoreBoard studentName="Le Van C" score={50} />
 
       <h2>1.3 — UserStatus</h2>
-      {/* TODO: Uncomment sau khi implement UserStatus */}
-      {/* <UserStatus name="Alice" isOnline={true} /> */}
-      {/* <UserStatus name="Bob" isOnline={false} lastSeen="10 phút trước" /> */}
-      {/* <UserStatus name="Charlie" isOnline={false} /> */}
+      <UserStatus name="Alice" isOnline={true} />
+      <UserStatus name="Bob" isOnline={false} lastSeen="10 phút trước" />
+      <UserStatus name="Charlie" isOnline={false} />
     </div>
   );
 }
@@ -128,17 +160,24 @@ export default App;
 //
 // Q1: Tại sao JSX dùng className thay vì class?
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: JSX được biên dịch thành mã JavaScript thông thường. Vì 'class' là một từ khóa dự phòng (reserved keyword) trong JavaScript để định nghĩa Class (ES6), nên React sử dụng 'className' để tránh xung đột cú pháp và tương ứng trực tiếp với thuộc tính DOM '.className' của HTML.
 //
 // Q2: Trong JSX, {condition && <Component />} — nếu condition = 0,
 //     UI sẽ hiển thị gì? Tại sao?
 //     Gợi ý: thử <p>{0 && "hello"}</p> trong browser
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: UI sẽ hiển thị số 0. Bởi vì trong JavaScript, biểu thức logic '0 && <Component />' sẽ trả về 0 (do 0 là falsy và && dừng tại đó). Trong React, số 0 là một giá trị hợp lệ để render và hiển thị trực tiếp lên giao diện (khác với false, null, undefined hay true không render ra gì). Để khắc phục, ta nên viết thành '!!condition && <Component />' hoặc 'condition > 0 && <Component />'.
 //
 // Q3: Khi nào dùng Fragment (<></>) thay vì <div>?
 //     Cho ví dụ cụ thể Fragment giải quyết vấn đề div thừa.
 //
-//     YOUR ANSWER: ___________________________________________________________
+//     YOUR ANSWER: Dùng Fragment khi cần gom nhóm nhiều phần tử con mà không muốn sinh ra một thẻ bọc (như '<div>') không cần thiết trong cây DOM thật. Việc thêm div dư thừa có thể phá vỡ CSS Layout (như Flexbox, Grid yêu cầu quan hệ cha-con trực tiếp) hoặc làm hỏng cấu trúc HTML hợp lệ (ví dụ: bọc thẻ div trực tiếp bên trong <tr>, <table>, <ul>).
+//     Ví dụ cụ thể:
+//     const TableColumns = () => (
+//       <>
+//         <td>Cột 1</td>
+//         <td>Cột 2</td>
+//       </>
+//     );
 //
 // ─────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@
  */
 
 import { useRef, useEffect } from "react";
-// TODO: import ProductCard từ "./ProductCard"
+import ProductCard from "./ProductCard";
 
 // ============================================================
 // TODO: Implement ProductList
@@ -66,8 +66,27 @@ import { useRef, useEffect } from "react";
 // TODO — Implement bên dưới:
 
 function ProductList({ products, cart, onAddToCart, onRemoveFromCart }) {
-  // TODO: implement
-  return null;
+  if (products.length === 0) {
+    return (
+      <div className="empty-state">
+        <p>Không tìm thấy sản phẩm nào.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <ProductCard
+          key={product.id}
+          {...product}
+          isInCart={cart.includes(product.id)}
+          onAddToCart={onAddToCart}
+          onRemoveFromCart={onRemoveFromCart}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default ProductList;

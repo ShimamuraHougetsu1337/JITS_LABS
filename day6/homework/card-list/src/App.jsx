@@ -25,8 +25,8 @@
  *   npm run dev
  */
 
-import { useState, useMemo, useCallback } from "react";
-// TODO: import ProductList từ "./components/ProductList"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import ProductList from "./components/ProductList";
 import "./App.css";
 
 // ─── Data mẫu (hardcode) ─────────────────────────────────────────────────────
@@ -82,19 +82,98 @@ const products = [
 
 function App() {
   // TODO: khai báo state (search, filterCategory, showInStockOnly, sortBy, cart)
-
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("name");
+  const [cart, setCart] = useState([]);
   // TODO: useMemo cho filteredAndSortedProducts
-
+  const filteredAndSortedProducts = useMemo(() => {
+    return products
+      .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+      .filter(p => filterCategory === "all" || p.category === filterCategory)
+      .filter(p => !showInStockOnly || p.inStock)
+      .sort((a, b) => {
+        if (sortBy === "name") return a.name.localeCompare(b.name);
+        if (sortBy === "price-asc") return a.price - b.price;
+        if (sortBy === "price-desc") return b.price - a.price;
+        if (sortBy === "rating") return b.rating - a.rating;
+        return 0;
+      });
+  }, [search, filterCategory, showInStockOnly, sortBy]);
   // TODO: useCallback cho handleAddToCart, handleRemoveFromCart
-
+  const handleAddToCart = useCallback(id => {
+    setCart(prev => prev.includes(id) ? prev : [...prev, id]);
+  }, []);
+  const handleRemoveFromCart = useCallback(id => {
+    setCart(prev => prev.filter(cartId => cartId !== id));
+  }, []);
   // Lấy danh sách categories unique từ data
   const categories = ["all", ...new Set(products.map(p => p.category))];
 
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (searchInputRef?.current) {
+      searchInputRef?.current.focus();
+    }
+  }, []);
+
   return (
     <div className="app">
-      {/* TODO: Implement UI */}
-      <h1>Product Store</h1>
-      <p>TODO: Implement theo yêu cầu trên</p>
+      <header className="header">
+        <h1>Product Store</h1>
+        <div className="cart-badge">Giỏ hàng: {cart.length} sản phẩm</div>
+      </header>
+
+      <div className="filters">
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Tìm kiếm sản phẩm..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+
+        <div className="category-buttons">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={filterCategory === cat ? "active" : ""}
+              onClick={() => setFilterCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <label className="instock-filter">
+          <input
+            type="checkbox"
+            checked={showInStockOnly}
+            onChange={e => setShowInStockOnly(e.target.checked)}
+          />
+          Chỉ còn hàng
+        </label>
+
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="name">Theo tên</option>
+          <option value="price-asc">Giá tăng dần</option>
+          <option value="price-desc">Giá giảm dần</option>
+          <option value="rating">Rating</option>
+        </select>
+      </div>
+
+      <div className="product-count">
+        Có {filteredAndSortedProducts.length} sản phẩm
+      </div>
+
+      <ProductList
+        products={filteredAndSortedProducts}
+        cart={cart}
+        onAddToCart={handleAddToCart}
+        onRemoveFromCart={handleRemoveFromCart}
+      />
     </div>
   );
 }

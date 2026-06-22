@@ -59,8 +59,27 @@
 // TODO — Implement bên dưới:
 
 function ProductCard({ id, name, price, category, rating, inStock, isInCart, onAddToCart, onRemoveFromCart }) {
-  // TODO: implement
-  return null;
+  console.log("ProductCard rendered:", name);
+
+  const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+  const formattedPrice = price.toLocaleString("vi-VN") + " ₫";
+
+  return (
+    <div className={`product-card ${!inStock ? "out-of-stock" : ""} ${isInCart ? "in-cart" : ""}`}>
+      <h3>{name}</h3>
+      <span className="category-badge">{category}</span>
+      <p className="price">Giá: {formattedPrice}</p>
+      <p className="rating">Rating: <span className="stars">{stars}</span></p>
+      <p>Trạng thái: <span className={inStock ? "in-stock-text" : "out-of-stock-text"}>{inStock ? "Còn hàng" : "Hết hàng"}</span></p>
+      {!inStock ? (
+        <button disabled>Hết hàng</button>
+      ) : isInCart ? (
+        <button onClick={() => onRemoveFromCart(id)}>Xóa khỏi giỏ</button>
+      ) : (
+        <button onClick={() => onAddToCart(id)}>Thêm vào giỏ</button>
+      )}
+    </div>
+  );
 }
 
 export default ProductCard;
