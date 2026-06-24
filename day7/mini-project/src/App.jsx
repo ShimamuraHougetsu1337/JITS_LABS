@@ -34,27 +34,28 @@ import "./App.css";
 const HISTORY_KEY = "github_search_history";
 const MAX_HISTORY = 5;
 
+
 function App() {
   // TODO: Khai báo state
-  // const [username, setUsername] = useState("");
-  // const [userData, setUserData] = useState(null);
-  // const [repos, setRepos] = useState([]);
-  // const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(null);
+  const [username, setUsername] = useState("");
+  const [userData, setUserData] = useState(null);
+  const [repos, setRepos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   //
   // Lazy initial state — đọc history từ localStorage một lần
-  // const [searchHistory, setSearchHistory] = useState(() => {
-  //   const saved = localStorage.getItem(HISTORY_KEY);
-  //   return saved ? JSON.parse(saved) : [];
-  // });
+  const [searchHistory, setSearchHistory] = useState(() => {
+    const saved = localStorage.getItem(HISTORY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // TODO: useRef cho search input (truyền xuống SearchBar)
-  // const searchInputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // TODO: useEffect — auto-focus khi mount
-  // useEffect(() => {
-  //   searchInputRef.current?.focus();
-  // }, []);
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // TODO: useEffect — fetch GitHub data khi username thay đổi
   // - Nếu username rỗng: clear state, return
@@ -65,26 +66,96 @@ function App() {
   // - Handle AbortError: return sớm
   // - Cleanup: controller.abort()
 
+  useEffect(() => {
+    if (!username) {
+      setUserData(null);
+      setRepos([])
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [userRes, repoRes] = await Promise.all([
+          fetch(`https://api.github.com/users/${username}`, { signal }),
+          fetch(`https://api.github.com/users/${username}/repos?per_page=30`, { signal })
+        ]);
+
+        if (!userRes.ok) {
+          if (userRes.status === 403) {
+            setError("GitHub rate limit exceeded. Try again in 1 hour.");
+            return;
+          }
+
+          if (userRes.status === 404) {
+            setError("User not found");
+            return;
+          }
+
+          setError("Failed to fetch user data");
+          return;
+        }
+
+        if (!repoRes.ok) {
+          setError("Failed to fetch repos data");
+          return;
+        }
+
+        const [user, repo] = await Promise.all([userRes.json(), repoRes.json()]);
+
+        setUserData(user);
+        setRepos(repo)
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+
+        setError("An unexpected error occurred");
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+    }
+  }, [username]);
+
   // TODO: useEffect — sync history vào localStorage khi searchHistory thay đổi
+  useEffect(() => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(searchHistory))
+  }, [searchHistory])
 
   // TODO: useMemo — sort repos
-  // const sortedRepos = useMemo(() => {
-  //   return [...repos].sort((a, b) => b.stargazers_count - a.stargazers_count);
-  // }, [repos]);
+  const sortedRepos = useMemo(() => {
+    return [...repos].sort((a, b) => b.stargazers_count - a.stargazers_count);
+  }, [repos]);
+
 
   // TODO: useCallback — handleSearch
-  // const handleSearch = useCallback((searchUsername) => {
-  //   const trimmed = searchUsername.trim();
-  //   if (!trimmed || trimmed === username) return;
-  //
-  //   setUsername(trimmed);
-  //
-  //   // Thêm vào history: loại trùng + giữ tối đa MAX_HISTORY
-  //   setSearchHistory((prev) => {
-  //     const filtered = prev.filter((h) => h !== trimmed);
-  //     return [trimmed, ...filtered].slice(0, MAX_HISTORY);
-  //   });
-  // }, [username]);
+  const handleSearch = useCallback((searchUsername) => {
+    const trimmed = searchUsername.trim();
+    if (!trimmed || trimmed === username) return;
+
+    setUsername(trimmed);
+
+    // Thêm vào history: loại trùng + giữ tối đa MAX_HISTORY
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((h) => h !== trimmed);
+      return [trimmed, ...filtered].slice(0, MAX_HISTORY);
+    });
+  }, [username]);
 
   return (
     <div className="app">
@@ -94,30 +165,30 @@ function App() {
 
       <main className="app-main">
         {/* TODO: Render SearchBar với inputRef và onSearch */}
-        {/* <SearchBar onSearch={handleSearch} inputRef={searchInputRef} /> */}
+        <SearchBar onSearch={handleSearch} inputRef={searchInputRef} />
 
         {/* TODO: Render SearchHistory nếu có history */}
-        {/* {searchHistory.length > 0 && (
+        {searchHistory.length > 0 && (
           <SearchHistory history={searchHistory} onSelect={handleSearch} />
-        )} */}
+        )}
 
         {/* TODO: Render theo state */}
         {/* Empty state */}
-        {/* {!username && <p className="empty-state">Nhập username để tìm kiếm</p>} */}
+        {!username && <p className="empty-state">Nhập username để tìm kiếm</p>}
 
         {/* Loading */}
-        {/* {loading && <div className="loading">Đang tải...</div>} */}
+        {loading && <div className="loading">Đang tải...</div>}
 
         {/* Error */}
-        {/* {error && !loading && <p className="error">{error}</p>} */}
+        {error && !loading && <p className="error">{error}</p>}
 
         {/* Result */}
-        {/* {userData && !loading && (
+        {userData && !loading && (
           <>
             <UserProfile user={userData} />
             <RepoList repos={sortedRepos} />
           </>
-        )} */}
+        )}
       </main>
     </div>
   );

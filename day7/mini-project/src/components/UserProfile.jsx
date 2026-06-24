@@ -59,6 +59,16 @@ function UserProfile({ user }) {
         <h2>{user.name || user.login}</h2>
         <p className="user-login">@{user.login}</p>
         {/* TODO: thêm bio, location, stats, link */}
+        {user.bio && <p className="user-bio">{user.bio}</p>}
+        {user.location && <p>📍{user.location}</p>}
+        <div className="user-stats">
+          <span><strong>{user.public_repos}</strong> repos</span>
+          <span><strong>{user.followers}</strong> followers</span>
+          <span><strong>{user.following}</strong> following</span>
+        </div>
+        <a href={user.html_url} target="_blank" rel="noreferrer">
+          Xem trên GitHub
+        </a>
       </div>
     </div>
   );

@@ -80,26 +80,96 @@ function PostManager() {
   const [formTitle, setFormTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+
   // TODO: Effect 1 — Fetch posts khi mount
   // GET https://jsonplaceholder.typicode.com/posts?_limit=10
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchPosts = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=10", { signal });
+        if (!res.ok) throw new Error("Failed to fetch posts");
+        const data = await res.json();
+        setPosts(data);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setError(error);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+    fetchPosts();
+    return () => controller.abort();
+  }, []);
 
   // TODO: Effect 2 — Fetch comments khi selectedPost thay đổi
   // Nếu selectedPost null: setComments([]), return
   // GET https://jsonplaceholder.typicode.com/posts/${selectedPost.id}/comments
+  useEffect(() => {
+    if (!selectedPost) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchComments = async () => {
+      setCommentsLoading(true);
+      setComments([]);
+      try {
+        const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${selectedPost.id}/comments`, { signal });
+        if (!res.ok) throw new Error("Failed to fetch comments");
+        const data = await res.json();
+        setComments(data);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error(err);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setCommentsLoading(false);
+        }
+      }
+    };
+
+    fetchComments();
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedPost]);
 
   // TODO: filteredPosts — useMemo
   // filter posts theo search (case-insensitive, theo title)
   const filteredPosts = useMemo(() => {
-    // TODO: implement
-    return posts;
+    return posts.filter((post) =>
+      post.title.toLowerCase().includes(search.toLowerCase())
+    );
   }, [posts, search]);
 
   // TODO: handleDelete — useCallback
   // DELETE /posts/:id → xóa post khỏi state
   // (JSONPlaceholder giả lập DELETE, không xóa thật — chỉ return {} với status 200)
-  const handleDelete = useCallback((postId) => {
-    // TODO: implement
-    // fetch DELETE, rồi setPosts(prev => prev.filter(p => p.id !== postId))
+  const handleDelete = useCallback(async (postId) => {
+    try {
+      const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete post");
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setSelectedPost((prev) => (prev?.id === postId ? null : prev));
+    } catch (err) {
+      alert(err.message || "Failed to delete post");
+    }
   }, []);
 
   // TODO: handleCreate — useCallback
@@ -108,8 +178,35 @@ function PostManager() {
   // Reset formTitle sau thành công
   const handleCreate = useCallback(async (e) => {
     e.preventDefault();
-    // TODO: implement
-  }, [formTitle]);
+    if (!formTitle.trim() || submitting) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          title: formTitle,
+          body: "This is a placeholder body generated for a new post.",
+          userId: 1,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create post");
+
+      const newPost = await res.json();
+      newPost.id = Date.now(); // Generate unique ID to avoid duplicates
+
+      setPosts((prev) => [newPost, ...prev]);
+      setFormTitle("");
+    } catch (err) {
+      alert(err.message || "Failed to create post");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [formTitle, submitting]);
 
   // TODO: handleSelectPost — toggle: nếu click post đang chọn → bỏ chọn
   function handleSelectPost(post) {
@@ -117,7 +214,7 @@ function PostManager() {
   }
 
   if (loading) return <p>Đang tải posts...</p>;
-  if (error)   return <p style={{ color: "red" }}>Lỗi: {error}</p>;
+  if (error) return <p style={{ color: "red" }}>Lỗi: {error}</p>;
 
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: 24 }}>

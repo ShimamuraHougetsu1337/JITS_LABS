@@ -26,40 +26,53 @@
 //
 // Gợi ý:
 // function RepoCard({ repo }) {
-//   return (
-//     <a
-//       className="repo-card"
-//       href={repo.html_url}
-//       target="_blank"
-//       rel="noreferrer"
-//     >
-//       <div className="repo-name">{repo.name}</div>
-//       {repo.description && (
-//         <div className="repo-description">{repo.description}</div>
+// return (
+//   <a
+//     className="repo-card"
+//     href={repo.html_url}
+//     target="_blank"
+//     rel="noreferrer"
+//   >
+//     <div className="repo-name">{repo.name}</div>
+//     {repo.description && (
+//       <div className="repo-description">{repo.description}</div>
+//     )}
+//     <div className="repo-meta">
+//       {repo.language && (
+//         <span className="repo-lang">
+//           <span className="lang-dot" />
+//           {repo.language}
+//         </span>
 //       )}
-//       <div className="repo-meta">
-//         {repo.language && (
-//           <span className="repo-lang">
-//             <span className="lang-dot" />
-//             {repo.language}
-//           </span>
-//         )}
-//         <span>⭐ {repo.stargazers_count.toLocaleString()}</span>
-//         <span>🍴 {repo.forks_count.toLocaleString()}</span>
-//       </div>
-//     </a>
-//   );
+//       <span>⭐ {repo.stargazers_count.toLocaleString()}</span>
+//       <span>🍴 {repo.forks_count.toLocaleString()}</span>
+//     </div>
+//   </a>
+// );
 // }
 
 function RepoCard({ repo }) {
   // TODO: implement — thay placeholder bằng UI thực
   return (
-    <a className="repo-card" href={repo.html_url} target="_blank" rel="noreferrer">
+    <a
+      className="repo-card"
+      href={repo.html_url}
+      target="_blank"
+      rel="noreferrer"
+    >
       <div className="repo-name">{repo.name}</div>
-      {repo.description && <div className="repo-description">{repo.description}</div>}
+      {repo.description && (
+        <div className="repo-description">{repo.description}</div>
+      )}
       <div className="repo-meta">
-        {/* TODO: thêm ngôn ngữ, stars, forks */}
-        <span>⭐ {repo.stargazers_count}</span>
+        {repo.language && (
+          <span className="repo-lang">
+            <span className="lang-dot" />
+            {repo.language}
+          </span>
+        )}
+        <span>⭐ {repo.stargazers_count.toLocaleString()}</span>
+        <span>🍴 {repo.forks_count.toLocaleString()}</span>
       </div>
     </a>
   );
